@@ -1,0 +1,13 @@
+$TTL 86400
+@   IN  SOA dns.{domain}. admin.{domain}. (
+        {serial} ; serial
+        10800 ; refresh
+        3600 ; retry
+        604800 ; expire
+        86400 ; minimum
+        )
+@   IN  NS  dns.{domain}.
+dns IN  A   {ip}
+@   IN  A   {ip}
+www IN  A   {ip}
+{records}
