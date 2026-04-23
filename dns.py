@@ -224,11 +224,11 @@ def run_dns_setup(domain, ip, records):
         step("Restart named", _restart_named),
     ])
 
-def run_reverse_dns_setup(ip, fqdn):
+def run_reverse_dns_setup(forward_domain, ip, fqdn):
     reverse_zone = _ip_to_reverse_zone(ip)
 
     return run_pipeline("REVERSE DNS", [
-        step("Create reverse zone", lambda: _create_reverse_zone(ip, fqdn)),
+        step("Create reverse zone", lambda: _create_reverse_zone(ip, fqdn, forward_domain)),
         step("Update named.conf", lambda: _update_reverse_named_conf(reverse_zone)),
         step("Validate reverse zone", lambda: _validate_reverse_zone(reverse_zone)),
         step("Restart named", _restart_named),
