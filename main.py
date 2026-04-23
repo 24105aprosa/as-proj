@@ -42,10 +42,11 @@ def collect_dns_inputs():
 
 
 def collect_reverse_dns_inputs():
+    forward_domain = input("Enter domain name (e.g. example.com): ").strip()
     ip = input("Enter IP address: ").strip()
     fqdn = input("Enter FQDN (e.g. server.example.com): ").strip()
 
-    return ip, fqdn
+    return forward_domain,ip, fqdn
 
 SERVICES = {
     "dns": {
