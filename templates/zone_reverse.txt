@@ -7,4 +7,4 @@ $TTL 86400
         86400 ; minimum
         )
 @   IN  NS  dns.{domain}.
-@   IN  PTR   {fqdn}
+{ptr}

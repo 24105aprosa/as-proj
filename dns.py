@@ -71,7 +71,12 @@ def _ip_to_reverse_zone(ip):
     return f"{parts[2]}.{parts[1]}.{parts[0]}.in-addr.arpa"
 
 
-def _create_reverse_zone(ip, fqdn):
+def _build_ptr_record(ip, fqdn):
+    last_octet = ip.split(".")[-1]
+    return f"{last_octet} IN PTR {fqdn}."
+
+
+def _create_reverse_zone(ip, fqdn, forward_domain):
     template_path = "templates/zone_reverse.txt"
 
     reverse_zone = _ip_to_reverse_zone(ip)
@@ -82,8 +87,11 @@ def _create_reverse_zone(ip, fqdn):
     with open(template_path, "r") as f:
         content = f.read()
 
-    content = content.replace("{domain}", reverse_zone)
-    content = content.replace("{fqdn}", fqdn)
+    ptr_record = _build_ptr_record(ip, fqdn)
+
+    content = content.replace("{reverse}", reverse_zone)
+    content = content.replace("{domain}", forward_domain)
+    content = content.replace("{ptr}", ptr_record)
     content = content.replace("{serial}", serial)
 
     if os.path.exists(zone_path):
