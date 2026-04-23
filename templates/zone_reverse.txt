@@ -8,5 +8,3 @@ $TTL 86400
         )
 @   IN  NS  dns.{domain}.
 @   IN  PTR   {fqdn}
-www IN  A   {ip}
-{records}
