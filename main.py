@@ -1,5 +1,7 @@
 from dns import run_dns_setup, run_reverse_dns_setup
-from setup import setup_dns_service
+from apache import run_apache_setup
+from full_web import run_full_web_setup
+from setup import setup_dns_service, setup_apache_service, setup_full_web_service
 
 # /////
 
@@ -60,6 +62,18 @@ SERVICES = {
         "runner": run_reverse_dns_setup,
         "setup": setup_dns_service,
         "inputs": collect_reverse_dns_inputs
+    },
+    "apache": {
+        "label": "Apache (VirtualHost)",
+        "runner": run_apache_setup,
+        "setup": setup_apache_service,
+        "inputs": lambda: (input("Enter domain name: ").strip(),)
+    },
+    "web": {
+        "label": "DNS + Apache (Full Website)",
+        "runner": run_full_web_setup,
+        "setup": setup_full_web_service,
+        "inputs": collect_dns_inputs
     }
 }
 

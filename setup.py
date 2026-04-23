@@ -46,3 +46,26 @@ def setup_dns_service():
     configure_named_conf_access()
 
     print("DNS service ready")
+
+# ///// Apache /////
+def setup_apache_service():
+    print("Installing Apache...")
+
+    subprocess.run(
+        ["dnf", "install", "-y", "httpd"],
+        check=True
+    )
+
+    print("Enabling httpd service...")
+
+    subprocess.run(
+        ["systemctl", "enable", "--now", "httpd"],
+        check=True
+    )
+
+    print("Apache service ready")
+
+# ///// Apache + DNS /////
+def setup_full_web_service():
+    setup_dns_service()
+    setup_apache_service()
