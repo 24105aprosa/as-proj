@@ -141,8 +141,9 @@ zone "{reverse_zone}" IN {{
 def _validate_zone(domain):
     result = subprocess.run(
         ["named-checkzone", domain, f"{ZONE_DIR}/{domain}.hosts"],
-        capture_output=True,
-        text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
     )
 
     if result.returncode != 0:
@@ -157,8 +158,9 @@ def _validate_zone(domain):
 def _validate_reverse_zone(reverse_zone):
     result = subprocess.run(
         ["named-checkzone", reverse_zone, f"/var/named/{reverse_zone}.hosts"],
-        capture_output=True,
-        text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
     )
 
     if result.returncode != 0:
@@ -171,8 +173,9 @@ def _validate_reverse_zone(reverse_zone):
 def _validate_named_conf():
     result = subprocess.run(
         ["named-checkconf"],
-        capture_output=True,
-        text=True
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
     )
 
     if result.returncode != 0:
