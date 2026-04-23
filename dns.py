@@ -72,7 +72,7 @@ def _ip_to_reverse_zone(ip):
 
 
 def _create_reverse_zone(ip, fqdn):
-    template_path = "templates/reverse_zone.txt"
+    template_path = "templates/zone_reverse.txt"
 
     reverse_zone = _ip_to_reverse_zone(ip)
     zone_path = f"{ZONE_DIR}/{reverse_zone}.hosts"
