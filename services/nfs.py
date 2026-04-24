@@ -114,7 +114,7 @@ def _apply_nfs():
     subprocess.run(["systemctl", "restart", "nfs-server"], check=True)
     return True
 
-# //// Main pipelines /////
+# ///// Main Pipelines /////
 
 def run_nfs_add_share(path, client, options):
     return run_pipeline("NFS ADD SHARE", [

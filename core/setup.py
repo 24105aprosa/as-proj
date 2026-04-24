@@ -132,3 +132,13 @@ def setup_nfs_service():
     _ensure_service("nfs-server")
 
     print("[✔] NFS service ready")
+
+# ///// Samba /////
+def setup_samba_service():
+    print("Setting up Samba service...")
+
+    _install_packages(["samba"])
+
+    _ensure_service("smb")
+
+    print("[✔] Samba service ready")

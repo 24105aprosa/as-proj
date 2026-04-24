@@ -23,11 +23,20 @@ from services.nfs import (
     run_nfs_inspect
 )
 
+from services.samba import (
+    run_samba_add_share,
+    run_samba_remove_share,
+    run_samba_edit_share,
+    run_samba_disable_share,
+    run_samba_inspect
+)
+
 from core.setup import (
     setup_dns_service,
     setup_apache_service,
     setup_full_web_service,
-    setup_nfs_service
+    setup_nfs_service,
+    setup_samba_service
 )
 
 # ///// Input collectors /////
@@ -83,6 +92,7 @@ def collect_reverse_remove_inputs():
     ip = input("Enter IP address: ").strip()
     return (None, ip)
 
+
 def collect_nfs_add():
     path = input("Directory to share: ").strip()
     client = input("Client IP/subnet (e.g. 192.168.1.0/24): ").strip()
@@ -104,6 +114,27 @@ def collect_nfs_edit():
     options = input("New options: ").strip()
 
     return (index, path, client, options)
+
+
+def collect_samba_add():
+    name = input("Share name: ").strip()
+    path = input("Directory to share: ").strip()
+    ro = input("Read-only? (yes/no): ").strip().lower()
+    return (name, path, "yes" if ro == "yes" else "no")
+
+def collect_samba_remove():
+    name = input("Share name to remove: ").strip()
+    return (name,)
+
+def collect_samba_edit():
+    name = input("Share name to edit: ").strip()
+    path = input("New path: ").strip()
+    ro = input("Read-only? (yes/no): ").strip().lower()
+    return (name, path, "yes" if ro == "yes" else "no")
+
+def collect_samba_disable():
+    name = input("Share name to disable: ").strip()
+    return (name,)
 
 # ///// Services /////
 
@@ -158,14 +189,24 @@ SERVICE_GROUPS = {
             "runner": run_nfs_add_share,
             "setup": setup_nfs_service,
             "inputs": collect_nfs_add
-        }
+        },
+            "samba_add": {
+                "label": "Samba (Add Share)",
+                "aliases": {
+                    "short": ["smb", "smb-a"],
+                    "numeric": ["6"]
+                },
+                "runner": run_samba_add_share,
+                "setup": setup_samba_service,
+                "inputs": collect_samba_add
+            }
     },
     "configure": {
         "nfs_inspect": {
             "label": "NFS (Inspect Shares)",
             "aliases": {
                 "short": ["nfs-list", "nfs-i"],
-                "numeric": ["6"]
+                "numeric": ["7"]
             },
             "runner": run_nfs_inspect,
             "setup": None,
@@ -175,7 +216,7 @@ SERVICE_GROUPS = {
             "label": "NFS (Edit Share)",
             "aliases": {
                 "short": ["nfs-e"],
-                "numeric": ["7"]
+                "numeric": ["8"]
             },
             "runner": run_nfs_edit_share,
             "setup": setup_nfs_service,
@@ -185,11 +226,41 @@ SERVICE_GROUPS = {
             "label": "NFS (Disable Share)",
             "aliases": {
                 "short": ["nfs-off", "nfs-d"],
-                "numeric": ["8"]
+                "numeric": ["9"]
             },
             "runner": run_nfs_disable_share,
             "setup": setup_nfs_service,
             "inputs": collect_nfs_disable
+        },
+        "samba_inspect": {
+            "label": "Samba (Inspect Shares)",
+            "aliases": {
+                "short": ["smb-i", "samba-list"],
+                "numeric": ["10"]
+            },
+            "runner": run_samba_inspect,
+            "setup": setup_samba_service,
+            "inputs": lambda: ()
+        },
+        "samba_edit": {
+            "label": "Samba (Edit Share)",
+            "aliases": {
+                "short": ["smb-e"],
+                "numeric": ["11"]
+            },
+            "runner": run_samba_edit_share,
+            "setup": setup_samba_service,
+            "inputs": collect_samba_edit
+        },
+        "samba_disable": {
+            "label": "Samba (Disable Share)",
+            "aliases": {
+                "short": ["smb-off"],
+                "numeric": ["12"]
+            },
+            "runner": run_samba_disable_share,
+            "setup": setup_samba_service,
+            "inputs": collect_samba_disable
         }
     },
     "teardown": {
@@ -197,7 +268,7 @@ SERVICE_GROUPS = {
             "label": "DNS (Remove Forward Zone)",
             "aliases": {
                 "short": ["dns-r", "forward-r"],
-                "numeric": ["9"]
+                "numeric": ["13"]
             },
             "meta": {
                 "destructive": True
@@ -210,7 +281,7 @@ SERVICE_GROUPS = {
             "label": "DNS (Remove Reverse Zone)",
             "aliases": {
                 "short": ["reverse-r"],
-                "numeric": ["10"]
+                "numeric": ["14"]
             },
             "meta": {
                 "destructive": True
@@ -223,7 +294,7 @@ SERVICE_GROUPS = {
             "label": "Apache (Remove VirtualHost)",
             "aliases": {
                 "short": ["apache-r"],
-                "numeric": ["11"]
+                "numeric": ["15"]
             },
             "meta": {
                 "destructive": True
@@ -236,7 +307,7 @@ SERVICE_GROUPS = {
             "label": "DNS + Apache (Full Website Removal)",
             "aliases": {
                 "short": ["web-r", "full-r"],
-                "numeric": ["12"]
+                "numeric": ["16"]
             },
             "meta": {
                 "destructive": True
@@ -249,7 +320,7 @@ SERVICE_GROUPS = {
             "label": "NFS (Remove Share)",
             "aliases": {
                 "short": ["nfs-r"],
-                "numeric": ["13"]
+                "numeric": ["17"]
             },
             "meta": {
                 "destructive": True
@@ -257,6 +328,19 @@ SERVICE_GROUPS = {
             "runner": run_nfs_remove_share,
             "setup": setup_nfs_service,
             "inputs": collect_nfs_remove
+        },
+        "samba_remove": {
+            "label": "Samba (Remove Share)",
+            "aliases": {
+                "short": ["smb-r"],
+                "numeric": ["18"]
+            },
+            "meta": {
+                "destructive": True
+            },
+            "runner": run_samba_remove_share,
+            "setup": setup_samba_service,
+            "inputs": collect_samba_remove
         }
     }
 }
