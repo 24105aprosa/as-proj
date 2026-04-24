@@ -34,7 +34,6 @@ from services.samba import (
 from services.backup import (
     run_full_snapshot_backup,
     run_home_incremental_backup,
-    run_full_incremental_backup,
     run_tar_restore,
     run_rsync_restore,
     run_backups_inspect
@@ -134,12 +133,12 @@ def collect_samba_add():
     name = input("Share name: ").strip()
     path = input("Directory to share: ").strip()
 
-    ro = _normalize_ro(input("Read-only? (yes/no): "))
+    ro = _normalize_ro(input("Read-only? (y/n): "))
 
     user = input("Samba username: ").strip()
     password = input("Password for user: ").strip()
 
-    return (name, path, user, password, "yes" if ro == "yes" else "no")
+    return (name, path, user, password, ro)
 
 def collect_samba_remove():
     name = input("Share name to remove: ").strip()
@@ -149,11 +148,11 @@ def collect_samba_edit():
     name = input("Share name to edit: ").strip()
     path = input("New path: ").strip()
 
-    ro = input("Read-only? (yes/no): ").strip().lower()
+    ro = _normalize_ro(input("Read-only? (y/n): "))
 
     user = input("New Samba username: ").strip()
 
-    return (name, path, user, "yes" if ro == "yes" else "no")
+    return (name, path, user, ro)
 
 def collect_samba_disable():
     name = input("Share name to disable: ").strip()
@@ -161,8 +160,8 @@ def collect_samba_disable():
 
 # ///// Backup input collectors /////
 def collect_backup_snapshot():
-    confirm = input("Backup system snapshot? (yes/no): ").strip().lower()
-    if confirm != "yes":
+    confirm = input("Backup system snapshot? (y/n): ").strip().lower()
+    if confirm != "y":
         return None
     return ()
 
@@ -170,8 +169,8 @@ def collect_backup_home():
     return ()
 
 def collect_backup_full():
-    confirm = input("Full system incremental backup? (yes/no): ").strip().lower()
-    if confirm != "yes":
+    confirm = input("Full system incremental backup? (y/n): ").strip().lower()
+    if confirm != "y":
         return None
     return ()
 
@@ -413,21 +412,11 @@ SERVICE_GROUPS = {
             "setup": setup_backup_service,
             "inputs": collect_backup_home
         },
-        "full": {
-            "label": "Backup (Full System Incremental - RSYNC)",
-            "aliases": {
-                "short": ["bak-full"],
-                "numeric": ["21"]
-            },
-            "runner": run_full_incremental_backup,
-            "setup": setup_backup_service,
-            "inputs": collect_backup_full
-        },
         "list": {
             "label": "Backup (List Snapshots)",
             "aliases": {
                 "short": ["bak-list", "bak-l"],
-                "numeric": ["22"]
+                "numeric": ["21"]
             },
             "runner": run_backups_inspect,
             "setup": setup_backup_service,
@@ -437,7 +426,7 @@ SERVICE_GROUPS = {
             "label": "Backup (Restore TAR Snapshot)",
             "aliases": {
                 "short": ["bak-rt"],
-                "numeric": ["23"]
+                "numeric": ["22"]
             },
             "runner": run_tar_restore,
             "setup": setup_backup_service,
@@ -447,7 +436,7 @@ SERVICE_GROUPS = {
             "label": "Backup (Restore RSYNC Snapshot)",
             "aliases": {
                 "short": ["bak-rr"],
-                "numeric": ["24"]
+                "numeric": ["23"]
             },
             "runner": run_rsync_restore,
             "setup": setup_backup_service,

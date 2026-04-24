@@ -64,7 +64,7 @@ def _tar_backup(paths):
     return True
 
 # ///// RSYNC incremental backup /////
-def _rsync_backup(source="/home"):
+def _rsync_backup():
     _ensure_dirs()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -74,21 +74,35 @@ def _rsync_backup(source="/home"):
 
     last = _latest_rsync_backup()
 
-    cmd = ["rsync", "-a", "--delete"]
+    # Get actual user directories
+    users = [
+        d for d in os.listdir("/home")
+        if os.path.isdir(os.path.join("/home", d))
+    ]
 
-    if last:
-        cmd.append("--link-dest={}".format(last))
+    success = True
 
-    cmd += [source + "/", target]
+    for user in users:
+        src = f"/home/{user}/"
+        dst = os.path.join(target, user)
 
-    result = subprocess.run(cmd)
+        cmd = ["rsync", "-a", "--delete"]
 
-    if result.returncode != 0:
-        print("[!] RSYNC backup failed")
-        return False
+        if last:
+            cmd.append(f"--link-dest={os.path.join(last, user)}")
 
-    print("[+] Incremental backup created:", target)
-    return True
+        cmd += [src, dst]
+
+        result = subprocess.run(cmd)
+
+        if result.returncode != 0:
+            print(f"[!] Failed backing up user: {user}")
+            success = False
+
+    if success:
+        print("[+] User home backup created:", target)
+
+    return success
 
 # ///// TAR snapshot restore /////
 def _tar_restore(archive_path, target="/"):
@@ -119,29 +133,44 @@ def _tar_restore(archive_path, target="/"):
     return True
 
 # ///// RSYNC incremental restore /////
-def _rsync_restore(snapshot_path, target="/"):
+def _rsync_restore(snapshot_path):
     if not exists(snapshot_path):
         print("[!] Snapshot not found")
         return False
 
-    print("[*] Restoring RSYNC snapshot:", snapshot_path)
+    print("[*] Restoring user home directories from:", snapshot_path)
 
-    cmd = [
-        "rsync",
-        "-a",
-        "--delete",
-        snapshot_path + "/",
-        target
+    users = [
+        d for d in os.listdir(snapshot_path)
+        if os.path.isdir(os.path.join(snapshot_path, d))
     ]
 
-    result = subprocess.run(cmd)
+    success = True
 
-    if result.returncode != 0:
-        print("[!] RSYNC restore failed")
-        return False
+    for user in users:
+        src = os.path.join(snapshot_path, user) + "/"
+        dst = f"/home/{user}/"
 
-    print("[+] RSYNC restore complete")
-    return True
+        print(f"[*] Restoring {user}...")
+
+        cmd = [
+            "rsync",
+            "-a",
+            "--delete",
+            src,
+            dst
+        ]
+
+        result = subprocess.run(cmd)
+
+        if result.returncode != 0:
+            print(f"[!] Failed restoring user: {user}")
+            success = False
+
+    if success:
+        print("[+] RSYNC restore complete")
+
+    return success
 
 # ///// Pipeline wrappers /////
 def run_full_snapshot_backup(paths=DEFAULT_TARGETS):
@@ -151,14 +180,8 @@ def run_full_snapshot_backup(paths=DEFAULT_TARGETS):
 
 
 def run_home_incremental_backup():
-    return run_pipeline("RSYNC INCREMENTAL BACKUP", [
-        step("Create incremental backup", lambda: _rsync_backup("/home"))
-    ])
-
-
-def run_full_incremental_backup():
-    return run_pipeline("RSYNC FULL SYSTEM BACKUP", [
-        step("Backup system state", lambda: _rsync_backup("/"))
+    return run_pipeline("RSYNC USER BACKUP", [
+        step("Backup user home directories", _rsync_backup)
     ])
 
 def run_tar_restore(archive_path):
