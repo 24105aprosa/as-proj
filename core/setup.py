@@ -142,3 +142,11 @@ def setup_samba_service():
     _ensure_service("smb")
 
     print("[✔] Samba service ready")
+
+# ///// Backup /////
+def setup_backup_service():
+    print("Setting up Backup tools...")
+
+    _install_packages(["tar", "rsync"])
+
+    print("[✔] Backup tools ready")

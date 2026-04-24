@@ -45,7 +45,8 @@ from core.setup import (
     setup_apache_service,
     setup_full_web_service,
     setup_nfs_service,
-    setup_samba_service
+    setup_samba_service,
+    setup_backup_service
 )
 
 # ///// Helpers /////
@@ -399,7 +400,7 @@ SERVICE_GROUPS = {
                 "numeric": ["19"]
             },
             "runner": run_full_snapshot_backup,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_backup_snapshot
         },
         "home": {
@@ -409,7 +410,7 @@ SERVICE_GROUPS = {
                 "numeric": ["20"]
             },
             "runner": run_home_incremental_backup,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_backup_home
         },
         "full": {
@@ -419,7 +420,7 @@ SERVICE_GROUPS = {
                 "numeric": ["21"]
             },
             "runner": run_full_incremental_backup,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_backup_full
         },
         "list": {
@@ -429,7 +430,7 @@ SERVICE_GROUPS = {
                 "numeric": ["22"]
             },
             "runner": run_backups_inspect,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_backup_list
         },
         "tar_restore": {
@@ -439,7 +440,7 @@ SERVICE_GROUPS = {
                 "numeric": ["23"]
             },
             "runner": run_tar_restore,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_tar_restore
         },
         "rsync_restore": {
@@ -449,7 +450,7 @@ SERVICE_GROUPS = {
                 "numeric": ["24"]
             },
             "runner": run_rsync_restore,
-            "setup": None,
+            "setup": setup_backup_service,
             "inputs": collect_rsync_restore
         }
     }
