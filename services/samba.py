@@ -189,7 +189,7 @@ def _ensure_samba_user(username, password=None):
 def run_samba_add_share(name, path, user, password, read_only="no"):
     return run_pipeline("SAMBA ADD SHARE", [
         step("Ensure Samba user", lambda: _ensure_samba_user(user, password)),
-        step("Add share", lambda: _add_share(name, path, read_only)),
+        step("Add share", lambda: _add_share(name, path, user, read_only)),
         step("Apply config", _apply_samba),
     ])
 
