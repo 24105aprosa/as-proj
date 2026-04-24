@@ -280,16 +280,10 @@ def build_service_maps():
 def render_menu(services):
     print("\nAvailable services:\n")
 
-    grouped = {}
-
-    for key, svc in services.items():
-        group = svc.get("group", "other")
-        grouped.setdefault(group, []).append((key, svc))
-
-    for group_name, items in grouped.items():
+    for group_name, group in services.items():
         print(f"[{group_name.upper()}]")
 
-        for key, svc in items:
+        for key, svc in group.items():
             aliases = []
 
             for a in svc.get("aliases", {}).values():
