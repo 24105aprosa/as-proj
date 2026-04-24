@@ -1,6 +1,6 @@
 import os
 import subprocess
-from framework import run_pipeline, step, exists
+from core.framework import run_pipeline, step, exists
 
 # ///// Internal helpers /////
 
@@ -59,7 +59,7 @@ def _remove_vhost(domain):
 def _remove_web_root(domain):
     web_root = f"/var/www/{domain}"
 
-    if os.path.exists(web_root):
+    if exists(web_root):
         subprocess.run(["rm", "-rf", web_root], check=True)
         print(f"[+] Removed {web_root}")
     else:
@@ -98,7 +98,7 @@ def _restart_apache():
     subprocess.run(["systemctl", "restart", "httpd"], check=True)
     return True
 
-# ///// Main setup /////
+# ///// Main pipelines /////
 
 def run_apache_setup(domain):
     return run_pipeline("APACHE", [

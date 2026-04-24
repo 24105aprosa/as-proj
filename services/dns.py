@@ -2,8 +2,7 @@ import os
 import subprocess
 import re
 from datetime import datetime
-
-from framework import run_pipeline, step, exists
+from core.framework import run_pipeline, step, exists
 
 ZONE_DIR = "/var/named"
 NAMED_CONF = "/etc/named.conf"
@@ -252,7 +251,7 @@ def _restart_named():
         print("[ERROR] Failed to restart named:", e)
         return False
 
-# ///// Main setup /////
+# ///// Main pipelines /////
 
 def run_dns_setup(domain, ip, records):
     return run_pipeline("DNS", [

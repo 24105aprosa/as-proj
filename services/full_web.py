@@ -1,6 +1,6 @@
-from dns import run_dns_setup, run_dns_teardown
-from apache import run_apache_setup, run_apache_teardown
-from framework import run_pipeline, step
+from services.dns import run_dns_setup, run_dns_teardown
+from services.apache import run_apache_setup, run_apache_teardown
+from core.framework import run_pipeline, step
 
 # ///// Setup /////
 
