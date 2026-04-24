@@ -8,7 +8,7 @@ def main():
     services, alias_map = build_service_maps()
 
     while True:
-        render_menu(services)
+        render_menu(SERVICE_GROUPS)
 
         choice = input("Choose service (or 'exit'): ").strip().lower()
 
