@@ -3,13 +3,12 @@ import subprocess
 from core.framework import run_pipeline, step, exists
 
 # ///// Internal helpers /////
-
 def _create_vhost(domain):
     vhost_path = f"/etc/httpd/conf.d/{domain}.conf"
     web_root = f"/var/www/{domain}"
 
     if exists(vhost_path):
-        print("[*] VirtualHost already exists (skipping)")
+        print("VirtualHost já existe")
         return True
 
     os.makedirs(web_root, exist_ok=True)
@@ -40,33 +39,30 @@ def _create_vhost(domain):
     with open(vhost_path, "w") as f:
         f.write(vhost_config)
 
-    print(f"[+] VirtualHost created for {domain}")
+    print(f"[+] VirtualHost criado para {domain}")
     return True
-
 
 def _remove_vhost(domain):
     vhost_path = f"/etc/httpd/conf.d/{domain}.conf"
 
     if exists(vhost_path):
         os.remove(vhost_path)
-        print(f"[+] Removed {vhost_path}")
+        print(f"[+] VHost {vhost_path} apagado")
     else:
-        print("[*] VHost not found")
+        print("VHost não encontrado")
 
     return True
-
 
 def _remove_web_root(domain):
     web_root = f"/var/www/{domain}"
 
     if exists(web_root):
         subprocess.run(["rm", "-rf", web_root], check=True)
-        print(f"[+] Removed {web_root}")
+        print(f"[+] Web root {web_root} apagada")
     else:
-        print("[*] Web root not found")
+        print("Web root não encontrada")
 
     return True
-
 
 def _validate_apache_config():
     result = subprocess.run(
@@ -77,13 +73,12 @@ def _validate_apache_config():
     )
 
     if result.returncode != 0:
-        print("[ERROR] Apache config invalid:")
+        print("[ERROR] Configuração Apache inválida:")
         print(result.stderr)
         return False
 
-    print("[+] Apache config is valid")
+    print("[+] Configuração Apache válida")
     return True
-
 
 def _set_apache_permissions(domain):
     web_root = f"/var/www/{domain}"
@@ -93,24 +88,22 @@ def _set_apache_permissions(domain):
 
     return True
 
-
 def _restart_apache():
     subprocess.run(["systemctl", "restart", "httpd"], check=True)
     return True
 
-# ///// Main pipelines /////
-
+# ///// Pipeline wrappers /////
 def run_apache_setup(domain):
     return run_pipeline("APACHE", [
-        step("Create VirtualHost", lambda: _create_vhost(domain)),
-        step("Validate Apache config", _validate_apache_config),
-        step("Set permissions", lambda: _set_apache_permissions(domain)),
-        step("Restart Apache", _restart_apache),
+        step("Criar VirtualHost", lambda: _create_vhost(domain)),
+        step("Verificar configuração Apache", _validate_apache_config),
+        step("Definir permissões", lambda: _set_apache_permissions(domain)),
+        step("Reiniciar Apache", _restart_apache),
     ])
 
 def run_apache_teardown(domain):
     return run_pipeline("APACHE REMOVE", [
-        step("Remove VirtualHost", lambda: _remove_vhost(domain)),
-        step("Remove web root", lambda: _remove_web_root(domain)),
-        step("Restart Apache", _restart_apache),
+        step("Apagar VirtualHost", lambda: _remove_vhost(domain)),
+        step("Apagar web root", lambda: _remove_web_root(domain)),
+        step("Reiniciar Apache", _restart_apache),
     ])

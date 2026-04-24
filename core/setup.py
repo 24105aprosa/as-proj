@@ -2,7 +2,6 @@ import subprocess
 import re
 
 # ///// Helpers /////
-
 def _is_package_installed(pkg):
     result = subprocess.run(
         ["rpm", "-q", pkg],
@@ -11,12 +10,11 @@ def _is_package_installed(pkg):
     )
     return result.returncode == 0
 
-
 def _install_packages(packages):
     to_install = [pkg for pkg in packages if not _is_package_installed(pkg)]
 
     if not to_install:
-        print("[*] Packages already installed (skipping)")
+        print("Pacotes já estão instalados")
         return True
 
     print(f"[+] Installing: {' '.join(to_install)}")
@@ -28,7 +26,6 @@ def _install_packages(packages):
 
     return True
 
-
 def _is_service_active(service):
     result = subprocess.run(
         ["systemctl", "is-active", service],
@@ -36,7 +33,6 @@ def _is_service_active(service):
         stderr=subprocess.DEVNULL
     )
     return result.returncode == 0
-
 
 def _is_service_enabled(service):
     result = subprocess.run(
@@ -46,19 +42,18 @@ def _is_service_enabled(service):
     )
     return result.returncode == 0
 
-
 def _ensure_service(service):
     if not _is_service_enabled(service):
-        print(f"[+] Enabling {service}")
+        print(f"[+] Ativando {service}")
         subprocess.run(["systemctl", "enable", service], check=True)
     else:
-        print(f"[*] {service} already enabled")
+        print(f"{service} já está ativado")
 
     if not _is_service_active(service):
-        print(f"[+] Starting {service}")
+        print(f"[+] Iniciando {service}")
         subprocess.run(["systemctl", "start", service], check=True)
     else:
-        print(f"[*] {service} already running")
+        print(f"{service} já iniciou")
 
 
 def _configure_named_conf_access():
@@ -71,10 +66,10 @@ def _configure_named_conf_access():
     desired_query = "allow-query { any; };"
 
     if desired_listen in content and desired_query in content:
-        print("[*] named.conf already configured (skipping)")
+        print("named.conf já está configurado")
         return True
 
-    print("[+] Updating named.conf network access...")
+    print("[+] Atualizando acesso a redes em named.conf...")
 
     # Replace listen-on
     content = re.sub(
@@ -93,30 +88,30 @@ def _configure_named_conf_access():
     with open(path, "w") as f:
         f.write(content)
 
-    print("[+] named.conf updated")
+    print("[+] named.conf atualizado")
 
 # ///// DNS /////
 def setup_dns_service():
-    print("Setting up DNS service...")
+    print("DNS: preparação dos pacotes...")
 
     _install_packages(["bind", "bind-utils"])
 
     _ensure_service("named")
 
-    print("Configuring named.conf access rules...")
+    print("DNS: configuração de named.conf...")
     _configure_named_conf_access()
 
-    print("[✔] DNS service ready")
+    print("Serviço DNS pronto")
 
 # ///// Apache /////
 def setup_apache_service():
-    print("Setting up Apache service...")
+    print("Apache: preparação dos pacotes...")
 
     _install_packages(["httpd"])
 
     _ensure_service("httpd")
 
-    print("[✔] Apache service ready")
+    print("Serviço Apache pronto")
 
 # ///// Apache + DNS /////
 def setup_full_web_service():
@@ -125,28 +120,28 @@ def setup_full_web_service():
 
 # ///// NFS /////
 def setup_nfs_service():
-    print("Setting up NFS service...")
+    print("NFS: preparação dos pacotes...")
 
     _install_packages(["nfs-utils"])
 
     _ensure_service("nfs-server")
 
-    print("[✔] NFS service ready")
+    print("Serviço NFS pronto")
 
 # ///// Samba /////
 def setup_samba_service():
-    print("Setting up Samba service...")
+    print("Samba: preparação dos pacotes...")
 
     _install_packages(["samba"])
 
     _ensure_service("smb")
 
-    print("[✔] Samba service ready")
+    print("Serviço Samba pronto")
 
 # ///// Backup /////
 def setup_backup_service():
-    print("Setting up Backup tools...")
+    print("Tar e Rsync: preparação dos pacotes...")
 
     _install_packages(["tar", "rsync"])
 
-    print("[✔] Backup tools ready")
+    print("Serviços de backup prontos")

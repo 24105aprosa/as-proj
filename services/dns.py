@@ -7,8 +7,7 @@ from core.framework import run_pipeline, step, exists
 ZONE_DIR = "/var/named"
 NAMED_CONF = "/etc/named.conf"
 
-# ///// Internal helpers /////
-
+# ///// Helpers /////
 def _generate_serial(zone_path):
     today = datetime.now().strftime("%Y%m%d")
     highest_nn = 0
@@ -25,7 +24,6 @@ def _generate_serial(zone_path):
 
     return f"{today}{highest_nn + 1:02d}"
 
-
 def _build_records(records):
     lines = []
 
@@ -37,7 +35,6 @@ def _build_records(records):
             lines.append(f'@ IN MX {r["priority"]} {r["value"]}')
 
     return "\n".join(lines)
-
 
 def _create_zone_file(domain, ip, records):
     template_path = "templates/zone_master.txt"
@@ -62,18 +59,15 @@ def _create_zone_file(domain, ip, records):
     with open(zone_path, "w") as f:
         f.write(content)
 
-    print(f"[+] Zone file created at {zone_path} (serial {serial})")
-
+    print(f"[+] Zona master criada em {zone_path} (serial {serial})")
 
 def _ip_to_reverse_zone(ip):
     parts = ip.split(".")
     return f"{parts[2]}.{parts[1]}.{parts[0]}.in-addr.arpa"
 
-
 def _build_ptr_record(ip, fqdn):
     last_octet = ip.split(".")[-1]
     return f"{last_octet} IN PTR {fqdn}."
-
 
 def _create_reverse_zone(ip, fqdn, forward_domain):
     template_path = "templates/zone_reverse.txt"
@@ -100,27 +94,25 @@ def _create_reverse_zone(ip, fqdn, forward_domain):
     with open(zone_path, "w") as f:
         f.write(content)
 
-    print(f"[+] Reverse zone created: {reverse_zone}")
+    print(f"[+] Zona reverse criada a {reverse_zone}")
     return reverse_zone
-
 
 def _remove_zone_file(domain):
     zone_path = f"/var/named/{domain}.hosts"
 
     if exists(zone_path):
         os.remove(zone_path)
-        print(f"[+] Removed {zone_path}")
+        print(f"[+] Zona em {zone_path} apagada")
     else:
-        print("[*] Zone file not found (skipping)")
+        print("Ficheiro de zona não encontrado")
 
     return True
-
 
 def _update_named_conf(domain):
     with open(NAMED_CONF, "r") as f:
         content = f.read()
         if f'zone "{domain}"' in content:
-            print("[*] Zone already exists in named.conf (skipping)")
+            print("Zona master já existe em named.conf")
             return True
 
     config_block = f"""
@@ -133,14 +125,13 @@ zone "{domain}" IN {{
     with open(NAMED_CONF, "a") as f:
         f.write(config_block)
 
-    print("[+] named.conf updated")
+    print("[+] named.conf atualizado com zona master")
     return True
-
 
 def _update_reverse_named_conf(reverse_zone):
     with open(NAMED_CONF, "r") as f:
         if reverse_zone in f.read():
-            print("[*] Reverse zone already exists")
+            print("Zona reverse já existe em named.conf")
             return True
 
     config_block = f"""
@@ -153,9 +144,8 @@ zone "{reverse_zone}" IN {{
     with open(NAMED_CONF, "a") as f:
         f.write(config_block)
 
-    print("[+] Reverse named.conf updated")
+    print("[+] named.conf atualizado com zona reverse")
     return True
-
 
 def _remove_named_conf_zone(domain):
     path = "/etc/named.conf"
@@ -181,9 +171,8 @@ def _remove_named_conf_zone(domain):
     with open(path, "w") as f:
         f.writelines(new_lines)
 
-    print("[+] Removed zone from named.conf")
+    print("[+] Zona apagada de named.conf")
     return True
-
 
 def _validate_zone(domain):
     result = subprocess.run(
@@ -194,13 +183,12 @@ def _validate_zone(domain):
     )
 
     if result.returncode != 0:
-        print("[ERROR] Zone validation failed:")
+        print("[ERROR] Validação de zona falhou:")
         print(result.stderr)
         return False
 
-    print("[+] Zone file is valid")
+    print("[+] Zona validada com sucesso")
     return True
-
 
 def _validate_reverse_zone(reverse_zone):
     result = subprocess.run(
@@ -216,7 +204,6 @@ def _validate_reverse_zone(reverse_zone):
 
     return True
 
-
 def _validate_named_conf():
     result = subprocess.run(
         ["named-checkconf"],
@@ -226,12 +213,11 @@ def _validate_named_conf():
     )
 
     if result.returncode != 0:
-        print("[ERROR] named.conf invalid:")
+        print("[ERROR] named.conf inválido:")
         print(result.stderr)
         return False
 
     return True
-
 
 def _set_permissions(domain):
     try:
@@ -239,52 +225,50 @@ def _set_permissions(domain):
         subprocess.run(["chmod", "640", f"{ZONE_DIR}/{domain}.hosts"], check=True)
         return True
     except subprocess.CalledProcessError as e:
-        print("[ERROR] Permission setup failed:", e)
+        print("[ERROR] Setup de permissões falhou:", e)
         return False
-
 
 def _restart_named():
     try:
         subprocess.run(["systemctl", "restart", "named"], check=True)
         return True
     except subprocess.CalledProcessError as e:
-        print("[ERROR] Failed to restart named:", e)
+        print("[ERROR] named falhou a reiniciar:", e)
         return False
 
-# ///// Main pipelines /////
-
+# ///// Pipeline wrappers /////
 def run_dns_setup(domain, ip, records):
     return run_pipeline("DNS", [
-        step("Create zone file", lambda: _create_zone_file(domain, ip, records)),
-        step("Update named.conf", lambda: _update_named_conf(domain)),
-        step("Validate zone file", lambda: _validate_zone(domain)),
-        step("Validate named.conf", _validate_named_conf),
-        step("Set permissions", lambda: _set_permissions(domain)),
-        step("Restart named", _restart_named),
+        step("Criar zona master ", lambda: _create_zone_file(domain, ip, records)),
+        step("Atualizar named.conf", lambda: _update_named_conf(domain)),
+        step("Validar zona master", lambda: _validate_zone(domain)),
+        step("Validar named.conf", _validate_named_conf),
+        step("Definir permissões", lambda: _set_permissions(domain)),
+        step("Reiniciar named", _restart_named),
     ])
 
 def run_reverse_dns_setup(forward_domain, ip, fqdn):
     reverse_zone = _ip_to_reverse_zone(ip)
 
     return run_pipeline("REVERSE DNS", [
-        step("Create reverse zone", lambda: _create_reverse_zone(ip, fqdn, forward_domain)),
-        step("Update named.conf", lambda: _update_reverse_named_conf(reverse_zone)),
-        step("Validate reverse zone", lambda: _validate_reverse_zone(reverse_zone)),
-        step("Restart named", _restart_named),
+        step("Criar zona reverse", lambda: _create_reverse_zone(ip, fqdn, forward_domain)),
+        step("Atualizar named.conf", lambda: _update_reverse_named_conf(reverse_zone)),
+        step("Validar zona reverse", lambda: _validate_reverse_zone(reverse_zone)),
+        step("Reiniciar named", _restart_named),
     ])
 
 def run_dns_teardown(domain):
     return run_pipeline("DNS REMOVE", [
-        step("Remove zone file", lambda: _remove_zone_file(domain)),
-        step("Remove named.conf entry", lambda: _remove_named_conf_zone(domain)),
-        step("Restart named", _restart_named),
+        step("Apagar zona master", lambda: _remove_zone_file(domain)),
+        step("Apagar registo em named.conf", lambda: _remove_named_conf_zone(domain)),
+        step("Reiniciar named", _restart_named),
     ])
 
-def run_reverse_dns_teardown(forward_domain, ip):
+def run_reverse_dns_teardown(ip):
     reverse_zone = _ip_to_reverse_zone(ip)
     
     return run_pipeline("REVERSE DNS REMOVE", [
-        step("Remove zone file", lambda: _remove_zone_file(reverse_zone)),
-        step("Remove named.conf entry", lambda: _remove_named_conf_zone(reverse_zone)),
-        step("Restart named", _restart_named),
+        step("Apagar zona reverse", lambda: _remove_zone_file(reverse_zone)),
+        step("Apagar registo em named.conf", lambda: _remove_named_conf_zone(reverse_zone)),
+        step("Reiniciar named", _restart_named),
     ])

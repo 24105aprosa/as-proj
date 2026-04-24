@@ -1,7 +1,5 @@
 import subprocess
 import os
-import tarfile
-import shutil
 from datetime import datetime
 from core.framework import run_pipeline, step, exists
 
@@ -48,10 +46,10 @@ def _tar_backup(paths):
         if exists(p):
             valid_paths.append(p.lstrip("/"))
         else:
-            print(f"[*] Skipping missing path: {p}")
+            print(f"Diretoria não existe: {p}, ignorando")
 
     if not valid_paths:
-        print("[!] No valid paths to back up")
+        print("[!] Sem diretorias válidas para backup")
         return False
 
     cmd = [
@@ -64,10 +62,10 @@ def _tar_backup(paths):
     result = subprocess.run(cmd)
 
     if result.returncode != 0:
-        print("[!] TAR backup failed")
+        print("[!] Snapshot TAR falhou")
         return False
 
-    print("[+] Snapshot created:", archive)
+    print("[+] Snapshot criado:", archive)
     return True
 
 # ///// RSYNC incremental backup /////
@@ -103,21 +101,21 @@ def _rsync_backup():
         result = subprocess.run(cmd)
 
         if result.returncode != 0:
-            print(f"[!] Failed backing up user: {user}")
+            print(f"[!] Falhou backup do utilizador: {user}")
             success = False
 
     if success:
-        print("[+] User home backup created:", target)
+        print("[+] Backup de utilizador criado:", target)
 
     return success
 
 # ///// TAR snapshot restore /////
 def _tar_restore(archive_path, target="/"):
     if not exists(archive_path):
-        print("[!] Snapshot not found")
+        print("[!] Snapshot não encontrado")
         return False
 
-    print("[*] Restoring TAR snapshot:", archive_path)
+    print("Recuperando snapshot TAR:", archive_path)
 
     try:
         result = subprocess.run([
@@ -129,23 +127,23 @@ def _tar_restore(archive_path, target="/"):
         ])
 
         if result.returncode != 0:
-            print("[!] Restore failed")
+            print("[!] Recuperação falhou")
             return False
 
     except Exception as e:
-        print("[!] Restore exception:", e)
+        print("[!] Exceção:", e)
         return False
 
-    print("[+] TAR restore complete")
+    print("[+] Recuperação TAR concluída")
     return True
 
 # ///// RSYNC incremental restore /////
 def _rsync_restore(snapshot_path):
     if not exists(snapshot_path):
-        print("[!] Snapshot not found")
+        print("[!] Snapshot não encontrado")
         return False
 
-    print("[*] Restoring user home directories from:", snapshot_path)
+    print("Recuperando diretorias /home/*utilizador* de:", snapshot_path)
 
     users = [
         d for d in os.listdir(snapshot_path)
@@ -158,7 +156,7 @@ def _rsync_restore(snapshot_path):
         src = os.path.join(snapshot_path, user) + "/"
         dst = f"/home/{user}/"
 
-        print(f"[*] Restoring {user}...")
+        print(f"Recuperando {user}...")
 
         cmd = [
             "rsync",
@@ -171,7 +169,7 @@ def _rsync_restore(snapshot_path):
         result = subprocess.run(cmd)
 
         if result.returncode != 0:
-            print(f"[!] Failed restoring user: {user}")
+            print(f"[!] Falhou a recuperação do utilizador: {user}")
             success = False
 
     if success:
@@ -182,23 +180,22 @@ def _rsync_restore(snapshot_path):
 # ///// Pipeline wrappers /////
 def run_full_snapshot_backup(paths=DEFAULT_TARGETS):
     return run_pipeline("TAR SNAPSHOT BACKUP", [
-        step("Create snapshot archive", lambda: _tar_backup(paths))
+        step("Criar arquivo TAR", lambda: _tar_backup(paths))
     ])
-
 
 def run_home_incremental_backup():
     return run_pipeline("RSYNC USER BACKUP", [
-        step("Backup user home directories", _rsync_backup)
+        step("Guardar diretorias de utilizadores", _rsync_backup)
     ])
 
 def run_tar_restore(archive_path):
     return run_pipeline("TAR RESTORE", [
-        step("Restore snapshot", lambda: _tar_restore(archive_path))
+        step("Recuperar snapshot", lambda: _tar_restore(archive_path))
     ])
 
 def run_rsync_restore(snapshot_path):
     return run_pipeline("RSYNC RESTORE", [
-        step("Restore incremental backup", lambda: _rsync_restore(snapshot_path))
+        step("Recuperar backup incremental", lambda: _rsync_restore(snapshot_path))
     ])
 
 def run_backups_inspect():
@@ -206,7 +203,7 @@ def run_backups_inspect():
     for f in sorted(os.listdir(TAR_DIR)):
         print(" -", f)
 
-    print("\n[RSYNC SNAPSHOTS]")
+    print("\n[RSYNC BACKUPS]")
     for f in sorted(os.listdir(RSYNC_DIR)):
         print(" -", f)
 

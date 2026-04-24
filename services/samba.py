@@ -64,7 +64,7 @@ def _add_share(name, path, user, read_only="no"):
     blocks = _parse_smb_conf()
 
     if name in blocks:
-        print("[*] Share already exists (skipping)")
+        print("Partilha já existe")
         return True
 
     blocks[name] = [
@@ -77,7 +77,7 @@ def _add_share(name, path, user, read_only="no"):
 
     _write_smb_conf(blocks)
 
-    print("[+] Samba share added")
+    print("[+] Partilha Samba adicionada")
     return True
 
 
@@ -87,9 +87,9 @@ def _remove_share(name):
     if name in blocks:
         del blocks[name]
         _write_smb_conf(blocks)
-        print("[+] Samba share removed")
+        print("[+] Partilha Samba removida")
     else:
-        print("[*] Share not found (skipping)")
+        print("Partilha não encontrada")
 
     return True
 
@@ -98,7 +98,7 @@ def _disable_share(name):
     blocks = _parse_smb_conf()
 
     if name not in blocks:
-        print("[*] Share not found")
+        print("Partilha não encontrada")
         return True
 
     commented = []
@@ -111,7 +111,7 @@ def _disable_share(name):
     blocks[name] = ["# DISABLED\n"] + commented
     _write_smb_conf(blocks)
 
-    print("[+] Samba share disabled")
+    print("[+] Partilha Samba desativada")
     return True
 
 
@@ -119,13 +119,13 @@ def _edit_share(name, path, user, read_only):
     blocks = _parse_smb_conf()
 
     if name not in blocks:
-        print("[!] Share not found")
+        print("[!] Partilha não encontrada")
         return False
 
     created = _ensure_samba_user(user)
 
     if created is False:
-        print("[!] Aborting share edit (user not ready)")
+        print("[!] Sem utilizador válido, cancelando")
         return False
 
     blocks[name] = [
@@ -138,7 +138,7 @@ def _edit_share(name, path, user, read_only):
 
     _write_smb_conf(blocks)
 
-    print("[+] Samba share updated")
+    print("[+] Partilha Samba atualizada")
     return True
 
 
@@ -161,17 +161,17 @@ def _apply_samba(debug=False):
 
 def _ensure_samba_user(username, password=None):
     if not _linux_user_exists(username):
-        print(f"[*] User {username} does not exist.")
+        print(f"Utilizador {username} não existe.")
 
-        choice = input("Create user? (y/n): ").strip().lower()
+        choice = input("Criar utilizador? (y/n): ").strip().lower()
         if choice != "y":
-            print("[!] User creation skipped")
+            print("[!] Utilizador não criado")
             return False
 
         if not password:
-            password = input("Set password for new user: ").strip()
+            password = input("Password do novo utilizador: ").strip()
 
-        print(f"[*] Creating system user: {username}")
+        print(f"Novo utilizador do sistema: {username}")
         subprocess.run(["useradd", "-m", username], check=True)
 
         subprocess.run(
@@ -179,9 +179,9 @@ def _ensure_samba_user(username, password=None):
             check=True
         )
     else:
-        print(f"[*] User {username} exists")
+        print(f"Utilizador {username} já existe")
 
-    print(f"[*] Ensuring Samba user: {username}")
+    print(f"Verificando utilizador: {username}")
 
     subprocess.run(
         ["smbpasswd", "-a", username],
@@ -194,40 +194,36 @@ def _ensure_samba_user(username, password=None):
 
     return True
 
-# ///// Main Pipelines /////
+# ///// Pipeline wrappers /////
 def run_samba_add_share(name, path, user, password, read_only="no"):
     return run_pipeline("SAMBA ADD SHARE", [
-        step("Ensure Samba user", lambda: _ensure_samba_user(user, password)),
-        step("Add share", lambda: _add_share(name, path, user, read_only)),
-        step("Apply config", _apply_samba),
+        step("Verificar utilizador Samba", lambda: _ensure_samba_user(user, password)),
+        step("Adicionar partilha", lambda: _add_share(name, path, user, read_only)),
+        step("Aplicar config", _apply_samba),
     ])
-
 
 def run_samba_remove_share(name):
     return run_pipeline("SAMBA REMOVE SHARE", [
-        step("Remove share", lambda: _remove_share(name)),
-        step("Apply config", _apply_samba),
+        step("Apagar partilha", lambda: _remove_share(name)),
+        step("Aplicar config", _apply_samba),
     ])
-
 
 def run_samba_disable_share(name):
     return run_pipeline("SAMBA DISABLE SHARE", [
-        step("Disable share", lambda: _disable_share(name)),
-        step("Apply config", _apply_samba),
+        step("Desativar partilha", lambda: _disable_share(name)),
+        step("Aplicar config", _apply_samba),
     ])
-
 
 def run_samba_edit_share(name, path, user, read_only):
     return run_pipeline("SAMBA EDIT SHARE", [
-        step("Edit share", lambda: _edit_share(name, path, user, read_only)),
-        step("Apply config", _apply_samba),
+        step("Editar partilha", lambda: _edit_share(name, path, user, read_only)),
+        step("Aplicar config", _apply_samba),
     ])
-
 
 def run_samba_inspect():
     blocks = _parse_smb_conf()
 
-    print("\nSAMBA SHARES:\n")
+    print("\nPARTILHAS SAMBA:\n")
 
     for name, block in blocks.items():
         if name in ["global", "homes", "printers"]:

@@ -10,61 +10,51 @@ def main():
     while True:
         render_menu(SERVICE_GROUPS)
 
-        choice = input("Choose service (or 'exit'): ").strip().lower()
+        choice = input("Selecione um serviço, ou 'exit' para sair: ").strip().lower()
 
-        # Exit program
         if choice in ["exit", "quit", "q"]:
-            print("Exiting...")
+            print("Terminando...")
             break
 
-        # Back / refresh menu
         if choice == "back":
             continue
 
-        # Resolve alias → real service key
         if choice not in alias_map:
-            print("[!] Unknown service\n")
+            print("[!] Serviço desconhecido\n")
             continue
 
         service_key = alias_map[choice]
         service = services[service_key]
 
-        # Setup
         if service.get("setup"):
             service["setup"]()
 
-        # Inputs
         inputs = service["inputs"]()
-
         if inputs is None:
-            print("[*] Operation cancelled\n")
+            print("Operação cancelada\n")
             continue
 
         label = service.get("label", service_key)
 
-        # Allow user to cancel after input
-        confirm_run = input(f"Proceed with {label}? (y/n): ").strip().lower()
+        confirm_run = input(f"Quer prosseguir com {label}? (y/n): ").strip().lower()
         if confirm_run == "n":
-            print("[*] Returning to menu...\n")
+            print("Voltando ao menu...\n")
             continue
 
-        # Confirm destructive actions
         if service.get("meta", {}).get("destructive"):
-            confirm = input("⚠️ Confirm deletion? (y/n): ").strip().lower()
+            confirm = input("[!] Quer mesmo apagar? (y/n): ").strip().lower()
             if confirm != "y":
-                print("[!] Operation cancelled\n")
+                print("Operação cancelada\n")
                 continue
 
-        # Run
         success = service["runner"](*inputs)
 
         if success:
-            print(f"[✔] {service_key.upper()} completed successfully!\n")
+            print(f"[+] {service_key.upper()} completo com sucesso\n")
         else:
-            print(f"[!] {service_key.upper()} failed.\n")
+            print(f"[!] {service_key.upper()} falhou.\n")
 
-        input("Press Enter to continue...")
-
+        input("Enter para continuar...")
 
 if __name__ == "__main__":
     main()

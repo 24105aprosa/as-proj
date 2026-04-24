@@ -1,7 +1,5 @@
 import os
 
-# ///// Pipeline /////
-
 def run_pipeline(name, steps, silent=False):
     if not silent:
         print(f"\n===== [{name}] START =====")
@@ -12,31 +10,24 @@ def run_pipeline(name, steps, silent=False):
 
             if result is False or result is None:
                 if not silent:
-                    print(f"[✖] {name} failed")
+                    print(f"[!] {name} falhou")
                 return False
 
         except Exception as e:
             if not silent:
-                print(f"[ERROR] {name} failed during step: {e}")
+                print(f"[ERROR] {name} falhou durante passo: {e}")
             return False
 
     if not silent:
-        print(f"[✔] {name} completed successfully")
+        print(f"[+] {name} completo com sucesso")
     return True
 
-# ///// Step wrapper /////
-
 def step(name, fn, silent=False):
-    """
-    Optional helper to label steps nicely.
-    """
     def wrapper():
         if not silent:
-            print(f"[*] {name}")
+            print(f"{name}")
         return fn()
     return wrapper
-
-# ///// Helpers /////
 
 def exists(path):
     return os.path.exists(path)

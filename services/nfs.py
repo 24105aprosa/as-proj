@@ -5,7 +5,6 @@ from core.framework import run_pipeline, step, exists
 EXPORTS_FILE = "/etc/exports"
 
 # ///// Helpers /////
-
 def _parse_exports():
     shares = []
 
@@ -32,21 +31,19 @@ def _parse_exports():
 
     return shares
     
-
 def _add_share(path, client, options):
     shares = _parse_exports()
 
     for s in shares:
         if s["path"] == path and s["client"] == client:
-            print("[*] Share already exists (skipping)")
+            print("Partilha já existe")
             return True
 
     with open(EXPORTS_FILE, "a") as f:
         f.write(f"{path} {client}({options})\n")
 
-    print("[+] Share added")
+    print("[+] Partilha adicionada")
     return True
-
 
 def _remove_share(path, client=None):
     if not exists(EXPORTS_FILE):
@@ -61,9 +58,8 @@ def _remove_share(path, client=None):
 
             f.write(f"{s['path']} {s['client']}({s['options']})\n")
 
-    print("[+] Share removed")
+    print("[+] Partilha apagada")
     return True
-
 
 def _disable_share(path):
     if not exists(EXPORTS_FILE):
@@ -80,9 +76,8 @@ def _disable_share(path):
             else:
                 f.write(line)
 
-    print("[+] Share disabled (commented)")
+    print("[+] Partilha desativada")
     return True
-
 
 def _edit_share(path, new_path, new_client, new_options):
     shares = _parse_exports()
@@ -102,59 +97,55 @@ def _edit_share(path, new_path, new_client, new_options):
             f.write(f"{s['path']} {s['client']}({s['options']})\n")
 
     if not updated:
-        print("[!] Share not found")
+        print("[!] Partilha não encontrada")
         return False
 
-    print("[+] Share updated")
+    print("[+] Partilha atualizada")
     return True
-
 
 def _apply_nfs():
     subprocess.run(["exportfs", "-rav"], check=True)
     subprocess.run(["systemctl", "restart", "nfs-server"], check=True)
     return True
 
-# ///// Main Pipelines /////
-
+# ///// Pipeline wrappers /////
 def run_nfs_add_share(path, client, options):
     return run_pipeline("NFS ADD SHARE", [
-        step("Add share", lambda: _add_share(path, client, options)),
-        step("Apply exports", _apply_nfs),
+        step("Adicionar partilha", lambda: _add_share(path, client, options)),
+        step("Reiniciar nfs-server", _apply_nfs),
     ])
-
 
 def run_nfs_remove_share(path):
     return run_pipeline("NFS REMOVE SHARE", [
-        step("Remove share", lambda: _remove_share(path)),
-        step("Apply exports", _apply_nfs),
+        step("Apagar partilha", lambda: _remove_share(path)),
+        step("Reiniciar nfs-server", _apply_nfs),
     ])
-
 
 def run_nfs_disable_share(path):
     return run_pipeline("NFS DISABLE SHARE", [
-        step("Disable share", lambda: _disable_share(path)),
-        step("Apply exports", _apply_nfs),
+        step("Desativar partilha", lambda: _disable_share(path)),
+        step("Reiniciar nfs-server", _apply_nfs),
     ])
 
 def run_nfs_edit_share(index, path, client, options):
     return run_pipeline("NFS EDIT SHARE", [
-        step("Edit share", lambda: _edit_share(index, path, client, options)),
-        step("Apply exports", _apply_nfs),
+        step("Editar partilha", lambda: _edit_share(index, path, client, options)),
+        step("Reiniciar nfs-server", _apply_nfs),
     ])
 
 def run_nfs_inspect():
     shares = _parse_exports()
 
     if not shares:
-        print("[*] No NFS shares configured")
+        print("Sem partilhas NFS configuradas")
         return True
 
-    print("\nNFS SHARES:")
+    print("\nPARTILHAS NFS:")
     print("-" * 40)
 
     for i, s in enumerate(shares, 1):
         print(f"[{i}] Path: {s['path']}")
-        print(f"    Client: {s['client']}")
-        print(f"    Options: {s['options']}\n")
+        print(f"    Cliente: {s['client']}")
+        print(f"    Opções: {s['options']}\n")
 
     return True
