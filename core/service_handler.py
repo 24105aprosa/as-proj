@@ -66,7 +66,7 @@ def collect_dns_inputs():
             break
 
         rtype = input("Tipo (A/MX): ").strip().upper()
-        name = input("Nome (e.g. www, mail, @): ").strip()
+        name = input("Nome (ex.: www, mail, @): ").strip()
 
         if rtype == "A":
             value = input("Endereço IP: ").strip()
@@ -77,7 +77,7 @@ def collect_dns_inputs():
             })
 
         elif rtype == "MX":
-            priority = input("Prioridade (e.g. 10): ").strip()
+            priority = input("Prioridade (ex.: 10): ").strip()
             value = input("Servidor de mail (FQDN): ").strip()
             records.append({
                 "type": "MX",
@@ -107,8 +107,8 @@ def collect_reverse_remove_inputs():
 # ///// NFS input collectors /////
 def collect_nfs_add():
     path = input("Diretoria a partilhar: ").strip()
-    client = input("IP/máscara(e.g. 192.168.1.0/24): ").strip()
-    options = input("Opções (e.g. rw,sync,no_root_squash): ").strip()
+    client = input("IP/máscara(ex.: 192.168.1.0/24): ").strip()
+    options = input("Opções (ex.: rw,sync,no_root_squash): ").strip()
     return (path, client, options)
 
 def collect_nfs_remove():
