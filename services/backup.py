@@ -99,11 +99,20 @@ def _tar_restore(archive_path, target="/"):
     print("[*] Restoring TAR snapshot:", archive_path)
 
     try:
-        with tarfile.open(archive_path, "r:gz") as tar:
-            for member in tar.getmembers():
-                tar.extract(member, path=target)
+        result = subprocess.run([
+            "tar",
+            "-xzf",
+            archive_path,
+            "-C",
+            target
+        ])
+
+        if result.returncode != 0:
+            print("[!] Restore failed")
+            return False
+
     except Exception as e:
-        print("[!] Restore failed:", e)
+        print("[!] Restore exception:", e)
         return False
 
     print("[+] TAR restore complete")
