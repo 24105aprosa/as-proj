@@ -31,6 +31,15 @@ from services.samba import (
     run_samba_inspect
 )
 
+from services.backup import (
+    run_full_snapshot_backup,
+    run_home_incremental_backup,
+    run_full_incremental_backup,
+    run_tar_restore,
+    run_rsync_restore,
+    run_backups_inspect
+)
+
 from core.setup import (
     setup_dns_service,
     setup_apache_service,
@@ -44,8 +53,7 @@ from core.setup import (
 def _normalize_ro(value):
     return "yes" if value.strip().lower() in ["yes", "y", "true", "1"] else "no"
 
-# ///// Input collectors /////
-
+# ///// DNS/Apache input collectors /////
 def collect_dns_inputs():
     domain = input("Enter domain name: ").strip()
     ip = input("Enter primary server IP: ").strip()
@@ -97,7 +105,7 @@ def collect_reverse_remove_inputs():
     ip = input("Enter IP address: ").strip()
     return (None, ip)
 
-
+# ///// NFS input collectors /////
 def collect_nfs_add():
     path = input("Directory to share: ").strip()
     client = input("Client IP/subnet (e.g. 192.168.1.0/24): ").strip()
@@ -120,7 +128,7 @@ def collect_nfs_edit():
 
     return (index, path, client, options)
 
-
+# ///// Samba input collectors /////
 def collect_samba_add():
     name = input("Share name: ").strip()
     path = input("Directory to share: ").strip()
@@ -150,8 +158,34 @@ def collect_samba_disable():
     name = input("Share name to disable: ").strip()
     return (name,)
 
-# ///// Services /////
+# ///// Backup input collectors /////
+def collect_backup_snapshot():
+    confirm = input("Backup system snapshot? (yes/no): ").strip().lower()
+    if confirm != "yes":
+        return None
+    return ()
 
+def collect_backup_home():
+    return ()
+
+def collect_backup_full():
+    confirm = input("Full system incremental backup? (yes/no): ").strip().lower()
+    if confirm != "yes":
+        return None
+    return ()
+
+def collect_tar_restore():
+    path = input("Enter TAR snapshot filename: ").strip()
+    return (f"/var/backups/snapshots/{path}",)
+
+def collect_rsync_restore():
+    path = input("Enter RSYNC snapshot folder name: ").strip()
+    return (f"/var/backups/rsync/{path}",)
+
+def collect_backup_list():
+    return ()
+
+# ///// Services /////
 SERVICE_GROUPS = {
     "provision": {
         "dns": {
@@ -356,6 +390,68 @@ SERVICE_GROUPS = {
             "setup": setup_samba_service,
             "inputs": collect_samba_remove
         }
+    },
+    "backup": {
+        "snapshot": {
+            "label": "Backup (Full Snapshot - TAR)",
+            "aliases": {
+                "short": ["bak-snap", "tar"],
+                "numeric": ["19"]
+            },
+            "runner": run_full_snapshot_backup,
+            "setup": None,
+            "inputs": collect_backup_snapshot
+        },
+        "home": {
+            "label": "Backup (Home Incremental - RSYNC)",
+            "aliases": {
+                "short": ["bak-home"],
+                "numeric": ["20"]
+            },
+            "runner": run_home_incremental_backup,
+            "setup": None,
+            "inputs": collect_backup_home
+        },
+        "full": {
+            "label": "Backup (Full System Incremental - RSYNC)",
+            "aliases": {
+                "short": ["bak-full"],
+                "numeric": ["21"]
+            },
+            "runner": run_full_incremental_backup,
+            "setup": None,
+            "inputs": collect_backup_full
+        },
+        "list": {
+            "label": "Backup (List Snapshots)",
+            "aliases": {
+                "short": ["bak-list", "bak-l"],
+                "numeric": ["22"]
+            },
+            "runner": run_backups_inspect,
+            "setup": None,
+            "inputs": collect_backup_list
+        },
+        "tar_restore": {
+            "label": "Backup (Restore TAR Snapshot)",
+            "aliases": {
+                "short": ["bak-rt"],
+                "numeric": ["23"]
+            },
+            "runner": run_tar_restore,
+            "setup": None,
+            "inputs": collect_tar_restore
+        },
+        "rsync_restore": {
+            "label": "Backup (Restore RSYNC Snapshot)",
+            "aliases": {
+                "short": ["bak-rr"],
+                "numeric": ["24"]
+            },
+            "runner": run_rsync_restore,
+            "setup": None,
+            "inputs": collect_rsync_restore
+        }
     }
 }
 
@@ -366,7 +462,6 @@ def build_service_maps():
     for group in SERVICE_GROUPS.values():
         for key, svc in group.items():
             services[key] = svc
-
             alias_map[key] = key
 
             for alias_group in svc.get("aliases", {}).values():
@@ -375,19 +470,19 @@ def build_service_maps():
 
     return services, alias_map
 
-def render_menu(services):
+def render_menu(service_groups):
     print("\nAvailable services:\n")
 
-    for group_name, group in services.items():
+    for group_name, group in service_groups.items():
         print(f"[{group_name.upper()}]")
 
         for key, svc in group.items():
-            aliases = []
+            alias_list = []
 
-            for a in svc.get("aliases", {}).values():
-                aliases.extend(a)
+            for alias_group in svc.get("aliases", {}).values():
+                alias_list.extend(alias_group)
 
-            alias_str = ", ".join(aliases)
+            alias_str = ", ".join(alias_list) if alias_list else "-"
 
             print(f"  - {key} ({alias_str}): {svc['label']}")
 

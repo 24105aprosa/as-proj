@@ -195,7 +195,6 @@ def _ensure_samba_user(username, password=None):
     return True
 
 # ///// Main Pipelines /////
-
 def run_samba_add_share(name, path, user, password, read_only="no"):
     return run_pipeline("SAMBA ADD SHARE", [
         step("Ensure Samba user", lambda: _ensure_samba_user(user, password)),

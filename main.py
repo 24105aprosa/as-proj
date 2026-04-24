@@ -1,7 +1,7 @@
 from core.service_handler import (
     SERVICE_GROUPS,
     build_service_maps,
-    render_menu
+    render_menu,
 )
 
 def main():
@@ -30,22 +30,26 @@ def main():
         service = services[service_key]
 
         # Setup
-        if service["setup"]:
+        if service.get("setup"):
             service["setup"]()
 
         # Inputs
         inputs = service["inputs"]()
 
+        if inputs is None:
+            print("[*] Operation cancelled\n")
+            continue
+
         # Allow user to cancel after input
-        confirm_run = input("Proceed? (yes/back): ").strip().lower()
-        if confirm_run == "back":
+        confirm_run = input("Proceed? (y/n): ").strip().lower()
+        if confirm_run == "n":
             print("[*] Returning to menu...\n")
             continue
 
         # Confirm destructive actions
         if service.get("meta", {}).get("destructive"):
-            confirm = input("⚠️ Confirm deletion? (yes/no): ").strip().lower()
-            if confirm != "yes":
+            confirm = input("⚠️ Confirm deletion? (y/n): ").strip().lower()
+            if confirm != "y":
                 print("[!] Operation cancelled\n")
                 continue
 
