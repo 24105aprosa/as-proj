@@ -160,18 +160,12 @@ def collect_samba_disable():
 
 # ///// Backup input collectors /////
 def collect_backup_snapshot():
-    confirm = input("Backup system snapshot? (y/n): ").strip().lower()
-    if confirm != "y":
-        return None
     return ()
 
 def collect_backup_home():
     return ()
 
 def collect_backup_full():
-    confirm = input("Full system incremental backup? (y/n): ").strip().lower()
-    if confirm != "y":
-        return None
     return ()
 
 def collect_tar_restore():

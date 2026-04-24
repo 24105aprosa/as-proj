@@ -40,8 +40,10 @@ def main():
             print("[*] Operation cancelled\n")
             continue
 
+        label = service.get("label", service_key)
+
         # Allow user to cancel after input
-        confirm_run = input("Proceed? (y/n): ").strip().lower()
+        confirm_run = input(f"Proceed with {label}? (y/n): ").strip().lower()
         if confirm_run == "n":
             print("[*] Returning to menu...\n")
             continue
@@ -60,6 +62,8 @@ def main():
             print(f"[✔] {service_key.upper()} completed successfully!\n")
         else:
             print(f"[!] {service_key.upper()} failed.\n")
+
+        input("Press Enter to continue...")
 
 
 if __name__ == "__main__":
