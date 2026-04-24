@@ -23,12 +23,12 @@ DEFAULT_TARGETS = [
 # ///// Helpers /////
 def _ensure_dirs():
     for path in [BACKUP_ROOT, TAR_DIR, RSYNC_DIR]:
-        if not os.path.exists(path):
+        if not exists(path):
             os.makedirs(path)
 
 
 def _latest_rsync_backup():
-    if not os.path.exists(RSYNC_DIR):
+    if not exists(RSYNC_DIR):
         return None
 
     entries = sorted(os.listdir(RSYNC_DIR))
@@ -44,7 +44,15 @@ def _tar_backup(paths):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     archive = os.path.join(TAR_DIR, "snapshot_{}.tar.gz".format(timestamp))
 
-    cmd = ["tar", "-czf", archive] + paths
+    cmd = [
+        "tar",
+        "-czf",
+        archive,
+        "-C", "/"
+    ]
+
+    clean_paths = [p.lstrip("/") for p in paths]
+    cmd += clean_paths
 
     result = subprocess.run(cmd)
 
@@ -84,7 +92,7 @@ def _rsync_backup(source="/home"):
 
 # ///// TAR snapshot restore /////
 def _tar_restore(archive_path, target="/"):
-    if not os.path.exists(archive_path):
+    if not exists(archive_path):
         print("[!] Snapshot not found")
         return False
 
@@ -103,7 +111,7 @@ def _tar_restore(archive_path, target="/"):
 
 # ///// RSYNC incremental restore /////
 def _rsync_restore(snapshot_path, target="/"):
-    if not os.path.exists(snapshot_path):
+    if not exists(snapshot_path):
         print("[!] Snapshot not found")
         return False
 
