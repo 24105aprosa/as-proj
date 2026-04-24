@@ -26,7 +26,6 @@ def _ensure_dirs():
         if not exists(path):
             os.makedirs(path)
 
-
 def _latest_rsync_backup():
     if not exists(RSYNC_DIR):
         return None
@@ -43,6 +42,17 @@ def _tar_backup(paths):
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     archive = os.path.join(TAR_DIR, "snapshot_{}.tar.gz".format(timestamp))
+
+    valid_paths = []
+    for p in paths:
+        if exists(p):
+            valid_paths.append(p.lstrip("/"))
+        else:
+            print(f"[*] Skipping missing path: {p}")
+
+    if not valid_paths:
+        print("[!] No valid paths to back up")
+        return False
 
     cmd = [
         "tar",
