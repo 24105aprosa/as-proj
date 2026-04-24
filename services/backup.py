@@ -92,7 +92,8 @@ def _tar_restore(archive_path, target="/"):
 
     try:
         with tarfile.open(archive_path, "r:gz") as tar:
-            tar.extractall(path=target)
+            for member in tar.getmembers():
+                tar.extract(member, path=target)
     except Exception as e:
         print("[!] Restore failed:", e)
         return False
