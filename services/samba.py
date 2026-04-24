@@ -6,21 +6,12 @@ from core.framework import run_pipeline, step, exists
 SMB_CONF = "/etc/samba/smb.conf"
 
 # ///// Helpers /////
-
 def _linux_user_exists(username):
     try:
         pwd.getpwnam(username)
         return True
     except KeyError:
         return False
-
-
-def _read_conf():
-    if not exists(SMB_CONF):
-        return ""
-    with open(SMB_CONF, "r") as f:
-        return f.read()
-
 
 def _parse_smb_conf():
     if not exists(SMB_CONF):
@@ -51,14 +42,12 @@ def _parse_smb_conf():
 
     return blocks
 
-
 def _write_smb_conf(blocks):
     with open(SMB_CONF, "w") as f:
         for name, lines in blocks.items():
             f.writelines(lines)
             if not lines[-1].endswith("\n"):
                 f.write("\n")
-
 
 def _add_share(name, path, user, read_only="no"):
     blocks = _parse_smb_conf()
@@ -80,7 +69,6 @@ def _add_share(name, path, user, read_only="no"):
     print("[+] Partilha Samba adicionada")
     return True
 
-
 def _remove_share(name):
     blocks = _parse_smb_conf()
 
@@ -92,7 +80,6 @@ def _remove_share(name):
         print("Partilha não encontrada")
 
     return True
-
 
 def _disable_share(name):
     blocks = _parse_smb_conf()
@@ -113,7 +100,6 @@ def _disable_share(name):
 
     print("[+] Partilha Samba desativada")
     return True
-
 
 def _edit_share(name, path, user, read_only):
     blocks = _parse_smb_conf()
@@ -141,7 +127,6 @@ def _edit_share(name, path, user, read_only):
     print("[+] Partilha Samba atualizada")
     return True
 
-
 def _apply_samba(debug=False):
     if debug:
         subprocess.run(["testparm", "-s"])
@@ -157,7 +142,6 @@ def _apply_samba(debug=False):
     subprocess.run(["systemctl", "restart", "nmb"], check=True)
 
     return True
-
 
 def _ensure_samba_user(username, password=None):
     if not _linux_user_exists(username):

@@ -48,8 +48,7 @@ from core.setup import (
     setup_backup_service
 )
 
-# ///// Helpers /////
-
+# ///// Read-only helper /////
 def _normalize_ro(value):
     return "yes" if value.strip().lower() in ["yes", "y", "true", "1"] else "no"
 

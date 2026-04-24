@@ -2,7 +2,7 @@ import os
 import subprocess
 from core.framework import run_pipeline, step, exists
 
-# ///// Internal helpers /////
+# ///// Helpers /////
 def _create_vhost(domain):
     vhost_path = f"/etc/httpd/conf.d/{domain}.conf"
     web_root = f"/var/www/{domain}"

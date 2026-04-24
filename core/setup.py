@@ -71,14 +71,12 @@ def _configure_named_conf_access():
 
     print("[+] Atualizando acesso a redes em named.conf...")
 
-    # Replace listen-on
     content = re.sub(
         r'listen-on port 53\s*\{[^}]*\};',
         desired_listen,
         content
     )
 
-    # Replace allow-query
     content = re.sub(
         r'allow-query\s*\{[^}]*\};',
         desired_query,

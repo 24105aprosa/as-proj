@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from core.framework import run_pipeline, step, exists
 
+# ///// Zone file paths /////
 ZONE_DIR = "/var/named"
 NAMED_CONF = "/etc/named.conf"
 
