@@ -1,3 +1,6 @@
+import os
+
+
 def run_pipeline(name, steps):
     print(f"\n===== [{name}] START =====")
 
@@ -25,3 +28,6 @@ def step(name, fn):
         print(f"[*] {name}")
         return fn()
     return wrapper
+
+def exists(path):
+    return os.path.exists(path)

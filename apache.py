@@ -1,12 +1,16 @@
 import os
 import subprocess
-from framework import run_pipeline, step
+from framework import run_pipeline, step, exists
 
 # ///// Internal helpers /////
 
 def _create_vhost(domain):
     vhost_path = f"/etc/httpd/conf.d/{domain}.conf"
     web_root = f"/var/www/{domain}"
+
+    if exists(vhost_path):
+        print("[*] VirtualHost already exists (skipping)")
+        return True
 
     os.makedirs(web_root, exist_ok=True)
 
@@ -37,6 +41,30 @@ def _create_vhost(domain):
         f.write(vhost_config)
 
     print(f"[+] VirtualHost created for {domain}")
+    return True
+
+
+def _remove_vhost(domain):
+    vhost_path = f"/etc/httpd/conf.d/{domain}.conf"
+
+    if exists(vhost_path):
+        os.remove(vhost_path)
+        print(f"[+] Removed {vhost_path}")
+    else:
+        print("[*] VHost not found")
+
+    return True
+
+
+def _remove_web_root(domain):
+    web_root = f"/var/www/{domain}"
+
+    if os.path.exists(web_root):
+        subprocess.run(["rm", "-rf", web_root], check=True)
+        print(f"[+] Removed {web_root}")
+    else:
+        print("[*] Web root not found")
+
     return True
 
 
@@ -77,5 +105,12 @@ def run_apache_setup(domain):
         step("Create VirtualHost", lambda: _create_vhost(domain)),
         step("Validate Apache config", _validate_apache_config),
         step("Set permissions", lambda: _set_apache_permissions(domain)),
+        step("Restart Apache", _restart_apache),
+    ])
+
+def run_apache_teardown(domain):
+    return run_pipeline("APACHE REMOVE", [
+        step("Remove VirtualHost", lambda: _remove_vhost(domain)),
+        step("Remove web root", lambda: _remove_web_root(domain)),
         step("Restart Apache", _restart_apache),
     ])

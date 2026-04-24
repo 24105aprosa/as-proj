@@ -3,7 +3,7 @@ import subprocess
 import re
 from datetime import datetime
 
-from framework import run_pipeline, step
+from framework import run_pipeline, step, exists
 
 ZONE_DIR = "/var/named"
 NAMED_CONF = "/etc/named.conf"
@@ -14,7 +14,7 @@ def _generate_serial(zone_path):
     today = datetime.now().strftime("%Y%m%d")
     highest_nn = 0
 
-    if os.path.exists(zone_path):
+    if exists(zone_path):
         with open(zone_path, "r") as f:
             content = f.read()
 
@@ -57,7 +57,7 @@ def _create_zone_file(domain, ip, records):
     record_block = _build_records(records)
     content = content.replace("{records}", record_block)
 
-    if os.path.exists(zone_path):
+    if exists(zone_path):
         subprocess.run(["cp", zone_path, backup_path], check=True)
 
     with open(zone_path, "w") as f:
@@ -94,7 +94,7 @@ def _create_reverse_zone(ip, fqdn, forward_domain):
     content = content.replace("{ptr}", ptr_record)
     content = content.replace("{serial}", serial)
 
-    if os.path.exists(zone_path):
+    if exists(zone_path):
         backup = f"{zone_path}.bak.{datetime.now().strftime('%Y%m%d%H%M%S')}"
         subprocess.run(["cp", zone_path, backup], check=True)
 
@@ -103,6 +103,18 @@ def _create_reverse_zone(ip, fqdn, forward_domain):
 
     print(f"[+] Reverse zone created: {reverse_zone}")
     return reverse_zone
+
+
+def _remove_zone_file(domain):
+    zone_path = f"/var/named/{domain}.hosts"
+
+    if exists(zone_path):
+        os.remove(zone_path)
+        print(f"[+] Removed {zone_path}")
+    else:
+        print("[*] Zone file not found (skipping)")
+
+    return True
 
 
 def _update_named_conf(domain):
@@ -143,6 +155,34 @@ zone "{reverse_zone}" IN {{
         f.write(config_block)
 
     print("[+] Reverse named.conf updated")
+    return True
+
+
+def _remove_named_conf_zone(domain):
+    path = "/etc/named.conf"
+
+    with open(path, "r") as f:
+        lines = f.readlines()
+
+    new_lines = []
+    inside_block = False
+
+    for line in lines:
+        if f'zone "{domain}"' in line:
+            inside_block = True
+            continue
+
+        if inside_block and "};" in line:
+            inside_block = False
+            continue
+
+        if not inside_block:
+            new_lines.append(line)
+
+    with open(path, "w") as f:
+        f.writelines(new_lines)
+
+    print("[+] Removed zone from named.conf")
     return True
 
 
@@ -231,5 +271,21 @@ def run_reverse_dns_setup(forward_domain, ip, fqdn):
         step("Create reverse zone", lambda: _create_reverse_zone(ip, fqdn, forward_domain)),
         step("Update named.conf", lambda: _update_reverse_named_conf(reverse_zone)),
         step("Validate reverse zone", lambda: _validate_reverse_zone(reverse_zone)),
+        step("Restart named", _restart_named),
+    ])
+
+def run_dns_teardown(domain):
+    return run_pipeline("DNS REMOVE", [
+        step("Remove zone file", lambda: _remove_zone_file(domain)),
+        step("Remove named.conf entry", lambda: _remove_named_conf_zone(domain)),
+        step("Restart named", _restart_named),
+    ])
+
+def run_reverse_dns_teardown(forward_domain, ip):
+    reverse_zone = _ip_to_reverse_zone(ip)
+    
+    return run_pipeline("REVERSE DNS REMOVE", [
+        step("Remove zone file", lambda: _remove_zone_file(reverse_zone)),
+        step("Remove named.conf entry", lambda: _remove_named_conf_zone(reverse_zone)),
         step("Restart named", _restart_named),
     ])
