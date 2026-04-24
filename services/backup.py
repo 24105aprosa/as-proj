@@ -7,8 +7,8 @@ from core.framework import run_pipeline, step, exists
 
 # ///// Backup paths /////
 BACKUP_ROOT = "/var/backups"
-TAR_DIR = os.path.join(BACKUP_ROOT, "snapshots")
-RSYNC_DIR = os.path.join(BACKUP_ROOT, "rsync")
+TAR_DIR = "/var/backups/snapshots"
+RSYNC_DIR = "/var/backups/rsync"
 
 # ///// Backup targets /////
 DEFAULT_TARGETS = [
@@ -22,7 +22,7 @@ DEFAULT_TARGETS = [
 
 # ///// Helpers /////
 def _ensure_dirs():
-    for path in [TAR_DIR, RSYNC_DIR]:
+    for path in [BACKUP_ROOT, TAR_DIR, RSYNC_DIR]:
         if not os.path.exists(path):
             os.makedirs(path)
 
