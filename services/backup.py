@@ -59,10 +59,7 @@ def _tar_backup(paths):
         "-czf",
         archive,
         "-C", "/"
-    ]
-
-    clean_paths = [p.lstrip("/") for p in paths]
-    cmd += clean_paths
+    ] + valid_paths
 
     result = subprocess.run(cmd)
 
