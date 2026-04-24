@@ -120,7 +120,11 @@ def collect_samba_add():
     name = input("Share name: ").strip()
     path = input("Directory to share: ").strip()
     ro = input("Read-only? (yes/no): ").strip().lower()
-    return (name, path, "yes" if ro == "yes" else "no")
+
+    user = input("Samba username: ").strip()
+    password = input("Password for user: ").strip()
+
+    return (name, path, user, password, "yes" if ro == "yes" else "no")
 
 def collect_samba_remove():
     name = input("Share name to remove: ").strip()
