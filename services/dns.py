@@ -61,6 +61,7 @@ def _create_zone_file(domain, ip, records):
         f.write(content)
 
     print(f"[+] Zona master criada em {zone_path} (serial {serial})")
+    return True
 
 def _ip_to_reverse_zone(ip):
     parts = ip.split(".")
