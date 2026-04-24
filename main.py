@@ -71,7 +71,6 @@ def collect_reverse_dns_inputs():
 def collect_domain_only():
     return (input("Enter domain name: ").strip(),)
 
-
 def collect_reverse_remove_inputs():
     ip = input("Enter IP address: ").strip()
     return (None, ip)
@@ -116,7 +115,7 @@ SERVICE_GROUPS = {
             "label": "DNS (Remove Reverse Zone)",
             "runner": run_reverse_dns_teardown,
             "setup": None,
-            "inputs": collect_reverse_dns_inputs
+            "inputs": collect_reverse_remove_inputs
         },
         "apache_remove": {
             "label": "Apache (Remove VirtualHost)",
