@@ -122,7 +122,13 @@ def _edit_share(name, path, user, read_only):
         print("[!] Share not found")
         return False
 
-    new_block = [
+    created = _ensure_samba_user(user)
+
+    if created is False:
+        print("[!] Aborting share edit (user not ready)")
+        return False
+
+    blocks[name] = [
         f"[{name}]\n",
         f"    path = {path}\n",
         "    browseable = yes\n",
@@ -130,7 +136,6 @@ def _edit_share(name, path, user, read_only):
         f"    valid users = {user}\n"
     ]
 
-    blocks[name] = new_block
     _write_smb_conf(blocks)
 
     print("[+] Samba share updated")
@@ -144,22 +149,35 @@ def _apply_samba():
     return True
 
 
-def _ensure_samba_user(username, password):
-    # 1. Ensure Linux user exists
+def _ensure_samba_user(username, password=None):
     if not _linux_user_exists(username):
+        print(f"[*] User {username} does not exist.")
+
+        choice = input("Create user? (y/n): ").strip().lower()
+        if choice != "y":
+            print("[!] User creation skipped")
+            return False
+
+        if not password:
+            password = input("Set password for new user: ").strip()
+
         print(f"[*] Creating system user: {username}")
         subprocess.run(["useradd", "-m", username], check=True)
-        subprocess.run(["bash", "-c", f"echo '{username}:{password}' | chpasswd"], check=True)
-    else:
-        print(f"[*] User {username} already exists (skipping system creation)")
 
-    # 2. Ensure Samba user exists / password set
+        subprocess.run(
+            ["bash", "-c", "echo '{}:{}' | chpasswd".format(username, password)],
+            check=True
+        )
+    else:
+        print(f"[*] User {username} exists")
+
     print(f"[*] Ensuring Samba user: {username}")
-    proc = subprocess.run(
+
+    subprocess.run(
         ["smbpasswd", "-a", username],
-        input=f"{password}\n{password}\n",
-        text=True,
-        capture_output=True
+        input=(password + "\n" + password + "\n").encode(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
     )
 
     subprocess.run(["smbpasswd", "-e", username], check=True)

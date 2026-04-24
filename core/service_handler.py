@@ -39,6 +39,11 @@ from core.setup import (
     setup_samba_service
 )
 
+# ///// Helpers /////
+
+def _normalize_ro(value):
+    return "yes" if value.strip().lower() in ["yes", "y", "true", "1"] else "no"
+
 # ///// Input collectors /////
 
 def collect_dns_inputs():
@@ -119,7 +124,8 @@ def collect_nfs_edit():
 def collect_samba_add():
     name = input("Share name: ").strip()
     path = input("Directory to share: ").strip()
-    ro = input("Read-only? (yes/no): ").strip().lower()
+
+    ro = _normalize_ro(input("Read-only? (yes/no): "))
 
     user = input("Samba username: ").strip()
     password = input("Password for user: ").strip()
@@ -133,8 +139,12 @@ def collect_samba_remove():
 def collect_samba_edit():
     name = input("Share name to edit: ").strip()
     path = input("New path: ").strip()
+
     ro = input("Read-only? (yes/no): ").strip().lower()
-    return (name, path, "yes" if ro == "yes" else "no")
+
+    user = input("New Samba username: ").strip()
+
+    return (name, path, user, "yes" if ro == "yes" else "no")
 
 def collect_samba_disable():
     name = input("Share name to disable: ").strip()
