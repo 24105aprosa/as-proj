@@ -142,10 +142,20 @@ def _edit_share(name, path, user, read_only):
     return True
 
 
-def _apply_samba():
-    subprocess.run(["testparm"], check=False)
+def _apply_samba(debug=False):
+    if debug:
+        subprocess.run(["testparm", "-s"])
+    else:
+        subprocess.run(
+            ["testparm", "-s"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False
+        )
+
     subprocess.run(["systemctl", "restart", "smb"], check=True)
     subprocess.run(["systemctl", "restart", "nmb"], check=True)
+
     return True
 
 
