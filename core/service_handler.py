@@ -130,7 +130,7 @@ def collect_nfs_edit():
 # ///// Samba input collectors /////
 def collect_samba_add():
     name = input("Nome da partilha: ").strip()
-    path = input("Diretoria a partilhar ").strip()
+    path = input("Diretoria a partilhar: ").strip()
 
     ro = _normalize_ro(input("Read-only? (y/n): "))
 
