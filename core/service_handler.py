@@ -274,7 +274,7 @@ SERVICE_GROUPS = {
         "samba_inspect": {
             "label": "Samba (Lista)",
             "aliases": {
-                "short": ["smb-i", "samba-list"],
+                "short": ["smb-list", "smb-i"],
                 "numeric": ["10"]
             },
             "runner": run_samba_inspect,
@@ -294,7 +294,7 @@ SERVICE_GROUPS = {
         "samba_disable": {
             "label": "Samba (Desativar Partilha)",
             "aliases": {
-                "short": ["smb-off"],
+                "short": ["smb-off", "smb-d"],
                 "numeric": ["12"]
             },
             "runner": run_samba_disable_share,
@@ -386,7 +386,7 @@ SERVICE_GROUPS = {
         "snapshot": {
             "label": "Backup (Snapshot - TAR)",
             "aliases": {
-                "short": ["bak-snap", "tar"],
+                "short": ["bak-snap", "tar", "t"],
                 "numeric": ["19"]
             },
             "runner": run_full_snapshot_backup,
@@ -396,7 +396,7 @@ SERVICE_GROUPS = {
         "home": {
             "label": "Backup (Incremental - RSYNC)",
             "aliases": {
-                "short": ["bak-home"],
+                "short": ["bak-home", "rsync", "r"],
                 "numeric": ["20"]
             },
             "runner": run_home_incremental_backup,
@@ -416,7 +416,7 @@ SERVICE_GROUPS = {
         "tar_restore": {
             "label": "Backup (Recuperar snapshot TAR)",
             "aliases": {
-                "short": ["bak-rt"],
+                "short": ["bak-rt", "rt"],
                 "numeric": ["22"]
             },
             "runner": run_tar_restore,
@@ -426,7 +426,7 @@ SERVICE_GROUPS = {
         "rsync_restore": {
             "label": "Backup (Recuperar backup RSYNC)",
             "aliases": {
-                "short": ["bak-rr"],
+                "short": ["bak-rr", "rr"],
                 "numeric": ["23"]
             },
             "runner": run_rsync_restore,
